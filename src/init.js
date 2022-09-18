@@ -1,6 +1,8 @@
 import * as yup from 'yup';
 import onChange from 'on-change';
 import { isEmpty } from 'lodash';
+import i18next from 'i18next';
+import resources from './locales/index.js';
 
 const rendeError = (elements, error, prevError) => {
   const formHadError = !isEmpty(prevError);
@@ -10,6 +12,8 @@ const rendeError = (elements, error, prevError) => {
   const inputFormElement = elements.feedForm.urlInput;
   const { form } = elements.feedForm;
   if (!formHadError && !formHasError) {
+    inputFormElement.focus();
+    form.reset();
     return;
   }
   if (!formHasError) {
@@ -24,13 +28,12 @@ const rendeError = (elements, error, prevError) => {
     inputFormElement.classList.remove('is-invalid');
     formContainer.lastChild.remove();
   }
-
-  const errorMessage = error.type === 'url' ? 'Ссылка должна быть валидным URL' : 'RSS уже существует';
   inputFormElement.classList.add('is-invalid');
   const errorElement = document.createElement('p');
   errorElement.classList.add('feedback', 'm-0', 'position-absolute', 'small', 'text-danger');
-  errorElement.textContent = errorMessage;
+  errorElement.textContent = error.message;
   formContainer.appendChild(errorElement);
+  inputFormElement.focus();
 };
 
 const render = (elements) => (path, value, prevValue) => {
@@ -46,9 +49,11 @@ const render = (elements) => (path, value, prevValue) => {
   }
 };
 
-const validateUrl = (url, urls) => {
-  const shema = yup.string().trim().required().url()
-    .notOneOf(urls);
+const validateUrl = (url, urls, i18nextInstance) => {
+  const shema = yup.string().trim()
+    .required(i18nextInstance.t('form.empty'))
+    .url(i18nextInstance.t('form.invalid'))
+    .notOneOf(urls, i18nextInstance.t('form.exist'));
   return shema.validate(url);
 };
 
@@ -60,8 +65,16 @@ export default () => {
       submitButton: document.querySelector('button[type="submit"]'),
     },
   };
+  const defaultLanguage = 'ru';
+  const i18n = i18next.createInstance();
+  i18n.init({
+    lng: defaultLanguage,
+    debug: false,
+    resources,
+  });
 
   const state = {
+    lng: defaultLanguage,
     urls: [],
     form: {
       valid: true,
@@ -71,7 +84,7 @@ export default () => {
     },
   };
   const watchedState = onChange(state, (path, value, prevValue) => {
-    // console.log(state.form.errors);
+    // console.log(state.form.errors.type);
     // console.log(path);
     // console.log(value);
     render(elements)(path, value, prevValue);
@@ -80,7 +93,7 @@ export default () => {
     evt.preventDefault();
     const formData = new FormData(evt.target);
     const url = formData.get('url');
-    validateUrl(url, watchedState.urls)
+    validateUrl(url, watchedState.urls, i18n)
       .then(() => {
         watchedState.form.errors = {};
         watchedState.urls.push(url);
