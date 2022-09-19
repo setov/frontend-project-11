@@ -83,16 +83,18 @@ export default () => {
       errors: {},
     },
   };
+  const initRender = render(elements);
   const watchedState = onChange(state, (path, value, prevValue) => {
     // console.log(state.form.errors.type);
     // console.log(path);
     // console.log(value);
-    render(elements)(path, value, prevValue);
+    // render(elements)(path, value, prevValue);
+    initRender(path, value, prevValue);
   });
   elements.feedForm.form.addEventListener('submit', (evt) => {
     evt.preventDefault();
     const formData = new FormData(evt.target);
-    const url = formData.get('url');
+    const url = formData.get('url').trim();
     validateUrl(url, watchedState.urls, i18n)
       .then(() => {
         watchedState.form.errors = {};
