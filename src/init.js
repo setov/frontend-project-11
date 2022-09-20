@@ -2,6 +2,8 @@ import * as yup from 'yup';
 import onChange from 'on-change';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
+import axios from 'axios';
+
 import resources from './locales/index.js';
 
 const rendeError = (elements, error, prevError) => {
@@ -36,12 +38,22 @@ const rendeError = (elements, error, prevError) => {
   inputFormElement.focus();
 };
 
+const getPorxyUrl = (url) => {
+  const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
+  proxyUrl.searchParams.set('url', url);
+  proxyUrl.searchParams.set('disableCache', 'true');
+  return proxyUrl.toString();
+};
+
 const render = (elements) => (path, value, prevValue) => {
   switch (path) {
     // case 'form.valid':
     //   elements.feedForm.submitButton.disabled = !value;
     //   break;
     case 'form.errors':
+      rendeError(elements, value, prevValue);
+      break;
+    case 'network.errors':
       rendeError(elements, value, prevValue);
       break;
     default:
@@ -59,6 +71,8 @@ const validateUrl = (url, urls, i18nextInstance) => {
 
 export default () => {
   const elements = {
+    postsContainer: document.querySelector('.posts'),
+    feedsContainer: document.querySelector('.feeds'),
     feedForm: {
       form: document.querySelector('.rss-form'),
       urlInput: document.getElementById('url-input'),
@@ -76,6 +90,10 @@ export default () => {
   const state = {
     lng: defaultLanguage,
     urls: [],
+    feeds: [],
+    network: {
+      errors: {},
+    },
     form: {
       valid: true,
       processState: 'filling',
@@ -86,7 +104,7 @@ export default () => {
   const initRender = render(elements);
   const watchedState = onChange(state, (path, value, prevValue) => {
     // console.log(state.form.errors.type);
-    // console.log(path);
+    console.log(path);
     // console.log(value);
     // render(elements)(path, value, prevValue);
     initRender(path, value, prevValue);
@@ -95,15 +113,30 @@ export default () => {
     evt.preventDefault();
     const formData = new FormData(evt.target);
     const url = formData.get('url').trim();
-    validateUrl(url, watchedState.urls, i18n)
+    validateUrl(url, watchedState.feeds, i18n)
       .then(() => {
         watchedState.form.errors = {};
         watchedState.urls.push(url);
         watchedState.form.valid = true;
+        return axios.get(getPorxyUrl(url));
+      })
+      .then((response) => {
+        console.log(response.status);
+        watchedState.network.errors = {};
+        watchedState.feeds.push(url);
       })
       .catch((e) => {
-        watchedState.form.errors = e;
-        watchedState.form.valid = false;
+        console.log(e.name);
+        if (e.name === 'ValidationError') {
+          watchedState.form.errors = e;
+          watchedState.form.valid = false;
+          watchedState.network.errors = {};
+        } else {
+          const error = {};
+          error.message = 'Ошибка сети';
+          watchedState.network.errors = error;
+          watchedState.form.errors = {};
+        }
       });
   });
 };
