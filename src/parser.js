@@ -3,6 +3,12 @@ import { uniqueId } from 'lodash';
 export default (xmlString) => {
   const parser = new DOMParser();
   const dom = parser.parseFromString(xmlString, 'application/xml');
+  const isParserError = dom.querySelector('parsererror');
+  if (isParserError) {
+    const error = new Error(`parserError: ${isParserError.textContent}`);
+    error.name = 'ParserError';
+    throw error;
+  }
   const feedId = uniqueId();
   const feed = {
     id: feedId,

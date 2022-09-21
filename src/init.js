@@ -98,7 +98,6 @@ export default () => {
   };
   const initRender = render(elements);
   const watchedState = onChange(state, (path, value, prevValue) => {
-    // console.log(state.form.errors.type);
     console.log(path);
     // console.log(value);
     // render(elements)(path, value, prevValue);
@@ -131,6 +130,9 @@ export default () => {
             break;
           case 'AxiosError':
             watchedState.errors = { message: i18n.t('networkError') };
+            break;
+          case 'ParserError':
+            watchedState.errors = { message: 'RSS error' };
             break;
           default:
             throw new Error(`Unexpected error ${e.name}`);
