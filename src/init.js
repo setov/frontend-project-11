@@ -50,10 +50,7 @@ const render = (elements) => (path, value, prevValue) => {
     // case 'form.valid':
     //   elements.feedForm.submitButton.disabled = !value;
     //   break;
-    case 'form.errors':
-      rendeError(elements, value, prevValue);
-      break;
-    case 'network.errors':
+    case 'errors':
       rendeError(elements, value, prevValue);
       break;
     default:
@@ -91,14 +88,11 @@ export default () => {
     lng: defaultLanguage,
     urls: [],
     feeds: [],
-    network: {
-      errors: {},
-    },
+    errors: {},
     form: {
       valid: true,
       processState: 'filling',
       processError: null,
-      errors: {},
     },
   };
   const initRender = render(elements);
@@ -115,27 +109,28 @@ export default () => {
     const url = formData.get('url').trim();
     validateUrl(url, watchedState.feeds, i18n)
       .then(() => {
-        watchedState.form.errors = {};
+        watchedState.errors = {};
         watchedState.urls.push(url);
         watchedState.form.valid = true;
         return axios.get(getPorxyUrl(url));
       })
       .then((response) => {
-        console.log(response.status);
-        watchedState.network.errors = {};
+        console.log(response.data);
+        watchedState.errors = {};
         watchedState.feeds.push(url);
       })
       .catch((e) => {
-        console.log(e.name);
-        if (e.name === 'ValidationError') {
-          watchedState.form.errors = e;
-          watchedState.form.valid = false;
-          watchedState.network.errors = {};
-        } else {
-          const error = {};
-          error.message = 'Ошибка сети';
-          watchedState.network.errors = error;
-          watchedState.form.errors = {};
+        // console.log(e.name);
+        switch (e.name) {
+          case 'ValidationError':
+            watchedState.errors = e;
+            watchedState.form.valid = false;
+            break;
+          case 'AxiosError':
+            watchedState.errors = { message: i18n.t('networkError') };
+            break;
+          default:
+            throw new Error(`Unexpected error ${e.name}`);
         }
       });
   });
