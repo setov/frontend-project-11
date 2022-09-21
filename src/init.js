@@ -5,6 +5,7 @@ import i18next from 'i18next';
 import axios from 'axios';
 
 import resources from './locales/index.js';
+import parser from './parser.js';
 
 const rendeError = (elements, error, prevError) => {
   const formHadError = !isEmpty(prevError);
@@ -115,7 +116,9 @@ export default () => {
         return axios.get(getPorxyUrl(url));
       })
       .then((response) => {
-        console.log(response.data);
+        const xml = response.data.contents;
+        const obj = parser(xml);
+        console.log(obj);
         watchedState.errors = {};
         watchedState.feeds.push(url);
       })
