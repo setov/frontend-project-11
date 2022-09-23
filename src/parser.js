@@ -16,6 +16,8 @@ export default (xmlString) => {
     link: dom.querySelector('link').textContent,
     description: dom.querySelector('description').textContent,
   };
+  const feeds = [];
+  feeds.push(feed);
   const posts = [];
   const nodeListItems = dom.querySelectorAll('item');
   nodeListItems.forEach((item) => {
@@ -28,5 +30,5 @@ export default (xmlString) => {
     };
     posts.push(post);
   });
-  return { feed, posts };
+  return { feeds, posts };
 };
