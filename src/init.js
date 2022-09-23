@@ -1,104 +1,17 @@
 import * as yup from 'yup';
 import onChange from 'on-change';
-import { isEmpty } from 'lodash';
 import i18next from 'i18next';
 import axios from 'axios';
 
 import resources from './locales/index.js';
 import parser from './parser.js';
-
-const renderFeeds = (elements, feeds) => {
-  const { feedsContainer } = elements;
-  console.log('in render feeds');
-  console.log(feeds);
-  const container = document.createElement('div');
-  container.classList.add('card', 'border-0');
-  const titleContainer = document.createElement('div');
-  titleContainer.classList.add('card-body');
-  const h2 = document.createElement('h2');
-  h2.classList.add('card-title', 'h4');
-  h2.textContent = 'Фиды';
-  titleContainer.appendChild(h2);
-  container.appendChild(titleContainer);
-  const ul = document.createElement('ul');
-  ul.classList.add('list-group', 'border-0', 'rounded-0');
-  const items = feeds.map(({ title, description }) => {
-    console.log('in map');
-    console.log(title);
-    console.log(description);
-    const li = document.createElement('li');
-    li.classList.add('list-group-item', 'border-0', 'border-end-0');
-    const h3 = document.createElement('h3');
-    h3.classList.add('h6', 'm-0');
-    h3.textContent = title;
-    li.appendChild(h3);
-    const p = document.createElement('p');
-    p.classList.add('m-0', 'small', 'text-black-50');
-    p.textContent = description;
-    li.appendChild(p);
-    return li;
-  });
-  console.log(feedsContainer);
-  // ul.appendChild(...items);
-  // container.appendChild(ul);
-  // feedsContainer.appendChild(container);
-  
-
-};
-
-const rendeError = (elements, error, prevError) => {
-  const formHadError = !isEmpty(prevError);
-  const formHasError = !isEmpty(error);
-
-  const formContainer = elements.feedForm.form.parentNode;
-  const inputFormElement = elements.feedForm.urlInput;
-  const { form } = elements.feedForm;
-  if (!formHadError && !formHasError) {
-    inputFormElement.focus();
-    form.reset();
-    return;
-  }
-  if (!formHasError) {
-    inputFormElement.classList.remove('is-invalid');
-    formContainer.lastChild.remove();
-    inputFormElement.focus();
-    form.reset();
-    return;
-  }
-
-  if (formHadError) {
-    inputFormElement.classList.remove('is-invalid');
-    formContainer.lastChild.remove();
-  }
-  inputFormElement.classList.add('is-invalid');
-  const errorElement = document.createElement('p');
-  errorElement.classList.add('feedback', 'm-0', 'position-absolute', 'small', 'text-danger');
-  errorElement.textContent = error.message;
-  formContainer.appendChild(errorElement);
-  inputFormElement.focus();
-};
+import render from './view.js';
 
 const getPorxyUrl = (url) => {
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
   proxyUrl.searchParams.set('url', url);
   proxyUrl.searchParams.set('disableCache', 'true');
   return proxyUrl.toString();
-};
-
-const render = (elements) => (path, value, prevValue) => {
-  switch (path) {
-    // case 'form.valid':
-    //   elements.feedForm.submitButton.disabled = !value;
-    //   break;
-    case 'errors':
-      rendeError(elements, value, prevValue);
-      break;
-    case 'uiState.feeds':
-      renderFeeds(elements, value);
-      break;
-    default:
-      break;
-  }
 };
 
 const validateUrl = (url, urls, i18nextInstance) => {
