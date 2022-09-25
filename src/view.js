@@ -70,11 +70,22 @@ const renderPosts = (elements, posts) => {
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.textContent = title;
+    const btn = document.createElement('button');
+    btn.classList.add(
+      'btn',
+      'btn-outline-primary',
+      'btn-sm',
+    );
+    btn.dataset.id = id;
+    btn.dataset.bsToggle = 'modal';
+    btn.dataset.bsTarget = '#modal';
+    btn.textContent = 'Просмотр';
+
     li.appendChild(a);
+    li.appendChild(btn);
     return li;
   });
   items.map((item) => ul.appendChild(item));
-  console.log('items: ', items);
   container.appendChild(ul);
   postsContainer.appendChild(container);
 };
