@@ -83,8 +83,8 @@ export default () => {
         const { feeds, posts } = obj;
         console.log(feeds);
         watchedState.uiState.feeds.push(...feeds);
-        console.log(state.feeds);
         watchedState.uiState.posts.push(...posts);
+        console.log(state.feeds);
         watchedState.errors = {};
         watchedState.feeds.push(url);
       })
