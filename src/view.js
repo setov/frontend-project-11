@@ -2,8 +2,7 @@ import { isEmpty } from 'lodash';
 
 const renderFeeds = (elements, feeds) => {
   const { feedsContainer } = elements;
-  console.log('in render feeds');
-  console.log(feeds);
+  feedsContainer.innerHTML = '';
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   const titleContainer = document.createElement('div');
@@ -31,14 +30,14 @@ const renderFeeds = (elements, feeds) => {
     li.appendChild(p);
     return li;
   });
-  console.log(feedsContainer);
-  ul.appendChild(...items);
+  items.map((item) => ul.appendChild(item));
   container.appendChild(ul);
   feedsContainer.appendChild(container);
 };
 
 const renderPosts = (elements, posts) => {
   const { postsContainer } = elements;
+  postsContainer.innerHTML = '';
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   const titleContainer = document.createElement('div');
@@ -50,7 +49,8 @@ const renderPosts = (elements, posts) => {
   container.appendChild(titleContainer);
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
-  posts.forEach(({
+
+  const items = posts.map(({
     title, link, id, feedId,
   }) => {
     const li = document.createElement('li');
@@ -71,8 +71,10 @@ const renderPosts = (elements, posts) => {
     a.rel = 'noopener noreferrer';
     a.textContent = title;
     li.appendChild(a);
-    ul.appendChild(li);
+    return li;
   });
+  items.map((item) => ul.appendChild(item));
+  console.log('items: ', items);
   container.appendChild(ul);
   postsContainer.appendChild(container);
 };
