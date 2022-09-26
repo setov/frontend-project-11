@@ -2,16 +2,46 @@ import * as yup from 'yup';
 import onChange from 'on-change';
 import i18next from 'i18next';
 import axios from 'axios';
+import { differenceWith, isEmpty } from 'lodash';
 
 import resources from './locales/index.js';
 import parser from './parser.js';
 import render from './view.js';
 
-const getPorxyUrl = (url) => {
+const getProxyUrl = (url) => {
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
   proxyUrl.searchParams.set('url', url);
   proxyUrl.searchParams.set('disableCache', 'true');
   return proxyUrl.toString();
+};
+
+const updatePosts = (state) => {
+  const { rssFeedUrls } = state;
+  const promises = rssFeedUrls.map((url) => {
+    console.log('feed url', url);
+    const proxifyUrl = getProxyUrl(url);
+    return axios.get(proxifyUrl)
+      .then((response) => {
+        const xml = response.data.contents;
+        const { posts } = parser(xml);
+        const uniquePosts = differenceWith(
+          posts,
+          state.uiState.posts,
+          (newPost, oldPost) => newPost.title === oldPost.title,
+        );
+        console.log('uniquePost', uniquePosts);
+        console.log(posts);
+        if (!isEmpty(uniquePosts)) {
+          state.uiState.posts.push(...uniquePosts);
+        }
+      });
+  });
+  console.log('updatePosts promises', promises);
+  return Promise.all(promises);
+};
+const repeatupdatePosts = (state, delay = 5000) => {
+  updatePosts(state)
+    .then(() => setTimeout(repeatupdatePosts, delay, state));
 };
 
 const validateUrl = (url, urls, i18nextInstance) => {
@@ -44,12 +74,11 @@ export default () => {
     lng: defaultLanguage,
     urls: [],
     feeds: [],
+    rssFeedUrls: [],
     errors: {},
     processState: '',
     form: {
-      valid: true,
-      processState: 'filling',
-      processError: null,
+      submitButtonState: false,
     },
     uiState: {
       feeds: [],
@@ -68,28 +97,30 @@ export default () => {
     evt.preventDefault();
     const formData = new FormData(evt.target);
     const url = formData.get('url').trim();
-    validateUrl(url, watchedState.feeds, i18n)
+    validateUrl(url, watchedState.rssFeedUrls, i18n)
       .then(() => {
         watchedState.errors = {};
-        watchedState.urls.push(url);
-        watchedState.form.valid = true;
-        return axios.get(getPorxyUrl(url));
+        // watchedState.urls.push(url);
+        watchedState.processState = 'loading';
+        return axios.get(getProxyUrl(url));
       })
       .then((response) => {
         watchedState.processState = 'loaded';
+        console.log('rssFeedurl ', url);
         const xml = response.data.contents;
-        const obj = parser(xml);
-        console.log(obj);
-        const { feeds, posts } = obj;
+        const { feeds, posts } = parser(xml);
+        watchedState.rssFeedUrls.push(url);
         console.log(feeds);
         watchedState.uiState.feeds.push(...feeds);
         watchedState.uiState.posts.push(...posts);
-        console.log(state.feeds);
+        // console.log(state.feeds);
         watchedState.errors = {};
-        watchedState.feeds.push(url);
+        // watchedState.feeds.push(url);
+        // repeatupdatePosts(state);
       })
       .catch((e) => {
         // console.log(e.name);
+        watchedState.processState = 'error';
         switch (e.name) {
           case 'ValidationError':
             watchedState.errors = e;
@@ -104,6 +135,9 @@ export default () => {
           default:
             throw new Error(`Unexpected error ${e.name}`);
         }
+      })
+      .finally(() => {
+        repeatupdatePosts(watchedState);
       });
   });
 };

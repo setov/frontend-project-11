@@ -121,6 +121,35 @@ const rendeError = (elements, error, prevError) => {
   formContainer.appendChild(errorElement);
   inputFormElement.focus();
 };
+const rendeFeedback = (elements, processState, prevProcessState) => {
+  const formContainer = elements.feedForm.form.parentNode;
+  const inputFormElement = elements.feedForm.urlInput;
+  if (prevProcessState === 'loaded') {
+    formContainer.lastChild.remove();
+  }
+  if (processState !== 'loaded') {
+    return;
+  }
+  const successFeedback = document.createElement('p');
+  successFeedback.classList.add(
+    'feedback',
+    'm-0',
+    'position-absolute',
+    'small',
+    'text-success',
+  );
+  successFeedback.textContent = 'RSS успешно загружен';
+  formContainer.appendChild(successFeedback);
+  inputFormElement.focus();
+};
+const submitButtonHandler = (elements, processState) => {
+  const { submitButton } = elements.feedForm;
+  if (processState === 'loading') {
+    submitButton.disabled = true;
+  } else {
+    submitButton.disabled = false;
+  }
+};
 
 export default (elements) => (path, value, prevValue) => {
   switch (path) {
@@ -135,6 +164,10 @@ export default (elements) => (path, value, prevValue) => {
       break;
     case 'uiState.posts':
       renderPosts(elements, value);
+      break;
+    case 'processState':
+      rendeFeedback(elements, value, prevValue);
+      submitButtonHandler(elements, value);
       break;
     default:
       break;
