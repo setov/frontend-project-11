@@ -29,4 +29,16 @@ module.exports = {
       template: 'index.html',
     }),
   ],
+  devServer: {
+    contentBase: path.join(__dirname, 'dist'),
+    compress: true,
+    host: '0.0.0.0',
+    port: 8000,
+    open: true,
+    overlay: {
+      warnings: true,
+      errors: true,
+    },
+    clientLogLevel: 'error',
+  },
 };
