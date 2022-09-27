@@ -18,7 +18,6 @@ const getProxyUrl = (url) => {
 const updatePosts = (state) => {
   const { rssFeedUrls } = state;
   const promises = rssFeedUrls.map((url) => {
-    console.log('feed url', url);
     const proxifyUrl = getProxyUrl(url);
     return axios.get(proxifyUrl)
       .then((response) => {
@@ -29,14 +28,11 @@ const updatePosts = (state) => {
           state.uiState.posts,
           (newPost, oldPost) => newPost.title === oldPost.title,
         );
-        console.log('uniquePost', uniquePosts);
-        console.log(posts);
         if (!isEmpty(uniquePosts)) {
-          state.uiState.posts.push(...uniquePosts);
+          state.uiState.posts.unshift(...uniquePosts);
         }
       });
   });
-  console.log('updatePosts promises', promises);
   return Promise.all(promises);
 };
 const repeatupdatePosts = (state, delay = 5000) => {
@@ -54,6 +50,9 @@ const validateUrl = (url, urls, i18nextInstance) => {
 
 export default () => {
   const elements = {
+    modalTitle: document.querySelector('.modal-title'),
+    modalBody: document.querySelector('.modal-body'),
+    modalFooter: document.querySelector('.modal-footer'),
     postsContainer: document.querySelector('.posts'),
     feedsContainer: document.querySelector('.feeds'),
     feedForm: {
@@ -84,13 +83,11 @@ export default () => {
       feeds: [],
       posts: [],
       selectedPostId: null,
+      selectedPostIds: [],
     },
   };
   const initRender = render(elements, state);
   const watchedState = onChange(state, (path, value, prevValue) => {
-    console.log(path);
-    // console.log(value);
-    // render(elements)(path, value, prevValue);
     initRender(path, value, prevValue);
   });
   elements.feedForm.form.addEventListener('submit', (evt) => {
@@ -100,26 +97,20 @@ export default () => {
     validateUrl(url, watchedState.rssFeedUrls, i18n)
       .then(() => {
         watchedState.errors = {};
-        // watchedState.urls.push(url);
         watchedState.processState = 'loading';
         return axios.get(getProxyUrl(url));
       })
       .then((response) => {
         watchedState.processState = 'loaded';
-        console.log('rssFeedurl ', url);
         const xml = response.data.contents;
         const { feeds, posts } = parser(xml);
         watchedState.rssFeedUrls.push(url);
-        console.log(feeds);
-        watchedState.uiState.feeds.push(...feeds);
-        watchedState.uiState.posts.push(...posts);
-        // console.log(state.feeds);
+        watchedState.uiState.feeds.unshift(...feeds);
+        watchedState.uiState.posts.unshift(...posts);
         watchedState.errors = {};
-        // watchedState.feeds.push(url);
-        // repeatupdatePosts(state);
+        repeatupdatePosts(watchedState);
       })
       .catch((e) => {
-        // console.log(e.name);
         watchedState.processState = 'error';
         switch (e.name) {
           case 'ValidationError':
@@ -135,9 +126,11 @@ export default () => {
           default:
             throw new Error(`Unexpected error ${e.name}`);
         }
-      })
-      .finally(() => {
-        repeatupdatePosts(watchedState);
       });
+  });
+  elements.postsContainer.addEventListener('click', (evt) => {
+    const selectedPostId = evt.target.dataset.id;
+    watchedState.uiState.selectedPostId = selectedPostId;
+    watchedState.uiState.selectedPostIds.push(selectedPostId);
   });
 };

@@ -15,9 +15,6 @@ const renderFeeds = (elements, feeds) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
   const items = feeds.map(({ title, description }) => {
-    console.log('in map');
-    console.log(title);
-    console.log(description);
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     const h3 = document.createElement('h3');
@@ -35,7 +32,7 @@ const renderFeeds = (elements, feeds) => {
   feedsContainer.appendChild(container);
 };
 
-const renderPosts = (elements, posts) => {
+const renderPosts = (elements, state, posts) => {
   const { postsContainer } = elements;
   postsContainer.innerHTML = '';
   const container = document.createElement('div');
@@ -88,6 +85,12 @@ const renderPosts = (elements, posts) => {
   items.map((item) => ul.appendChild(item));
   container.appendChild(ul);
   postsContainer.appendChild(container);
+  const { selectedPostIds } = state.uiState;
+  selectedPostIds.forEach((id) => {
+    const postHyperlinkElement = postsContainer.querySelector(`a[data-id="${id}"]`);
+    postHyperlinkElement.classList.remove('fw-bold');
+    postHyperlinkElement.classList.add('fw-normal');
+  });
 };
 
 const rendeError = (elements, error, prevError) => {
@@ -150,8 +153,23 @@ const submitButtonHandler = (elements, processState) => {
     submitButton.disabled = false;
   }
 };
+const renderModal = (elements, state, selectedId) => {
+  const { modalTitle } = elements;
+  const { modalBody } = elements;
+  const { modalFooter } = elements;
+  const { postsContainer } = elements;
+  const { posts } = state.uiState;
+  const post = posts.find((item) => item.id === selectedId);
+  modalTitle.textContent = post.title;
+  modalBody.textContent = post.description;
+  const hyperlinkElement = modalFooter.firstChild;
+  hyperlinkElement.href = post.link;
+  const postHyperlinkElement = postsContainer.querySelector(`a[data-id="${selectedId}"]`);
+  postHyperlinkElement.classList.remove('fw-bold');
+  postHyperlinkElement.classList.add('fw-normal');
+};
 
-export default (elements) => (path, value, prevValue) => {
+export default (elements, state) => (path, value, prevValue) => {
   switch (path) {
     // case 'form.valid':
     //   elements.feedForm.submitButton.disabled = !value;
@@ -163,11 +181,14 @@ export default (elements) => (path, value, prevValue) => {
       renderFeeds(elements, value);
       break;
     case 'uiState.posts':
-      renderPosts(elements, value);
+      renderPosts(elements, state, value);
       break;
     case 'processState':
       rendeFeedback(elements, value, prevValue);
       submitButtonHandler(elements, value);
+      break;
+    case 'uiState.selectedPostId':
+      renderModal(elements, state, value);
       break;
     default:
       break;
