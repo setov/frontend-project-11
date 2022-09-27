@@ -86,9 +86,9 @@ export default () => {
       selectedPostIds: [],
     },
   };
-  const initRender = render(elements, state, i18n);
+  const view = render(elements, state, i18n);
   const watchedState = onChange(state, (path, value, prevValue) => {
-    initRender(path, value, prevValue);
+    view(path, value, prevValue);
   });
   elements.feedForm.form.addEventListener('submit', (evt) => {
     evt.preventDefault();
