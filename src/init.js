@@ -86,7 +86,7 @@ export default () => {
       selectedPostIds: [],
     },
   };
-  const initRender = render(elements, state);
+  const initRender = render(elements, state, i18n);
   const watchedState = onChange(state, (path, value, prevValue) => {
     initRender(path, value, prevValue);
   });
@@ -118,10 +118,10 @@ export default () => {
             watchedState.form.valid = false;
             break;
           case 'AxiosError':
-            watchedState.errors = { message: i18n.t('networkError') };
+            watchedState.errors = { message: i18n.t('errors.networkError') };
             break;
           case 'ParserError':
-            watchedState.errors = { message: 'RSS error' };
+            watchedState.errors = { message: i18n.t('errors.rssError') };
             break;
           default:
             throw new Error(`Unexpected error ${e.name}`);

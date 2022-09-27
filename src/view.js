@@ -32,7 +32,7 @@ const renderFeeds = (elements, feeds) => {
   feedsContainer.appendChild(container);
 };
 
-const renderPosts = (elements, state, posts) => {
+const renderPosts = (elements, state, i18nextInstance, posts) => {
   const { postsContainer } = elements;
   postsContainer.innerHTML = '';
   const container = document.createElement('div');
@@ -76,7 +76,7 @@ const renderPosts = (elements, state, posts) => {
     btn.dataset.id = id;
     btn.dataset.bsToggle = 'modal';
     btn.dataset.bsTarget = '#modal';
-    btn.textContent = 'Просмотр';
+    btn.textContent = i18nextInstance.t('buttons.postPreview');
 
     li.appendChild(a);
     li.appendChild(btn);
@@ -124,7 +124,7 @@ const rendeError = (elements, error, prevError) => {
   formContainer.appendChild(errorElement);
   inputFormElement.focus();
 };
-const rendeFeedback = (elements, processState, prevProcessState) => {
+const rendeFeedback = (elements, i18nextInstance, processState, prevProcessState) => {
   const formContainer = elements.feedForm.form.parentNode;
   const inputFormElement = elements.feedForm.urlInput;
   if (prevProcessState === 'loaded') {
@@ -141,7 +141,7 @@ const rendeFeedback = (elements, processState, prevProcessState) => {
     'small',
     'text-success',
   );
-  successFeedback.textContent = 'RSS успешно загружен';
+  successFeedback.textContent = i18nextInstance.t('feedback');
   formContainer.appendChild(successFeedback);
   inputFormElement.focus();
 };
@@ -169,7 +169,7 @@ const renderModal = (elements, state, selectedId) => {
   postHyperlinkElement.classList.add('fw-normal');
 };
 
-export default (elements, state) => (path, value, prevValue) => {
+export default (elements, state, i18nextInstance) => (path, value, prevValue) => {
   switch (path) {
     // case 'form.valid':
     //   elements.feedForm.submitButton.disabled = !value;
@@ -181,10 +181,10 @@ export default (elements, state) => (path, value, prevValue) => {
       renderFeeds(elements, value);
       break;
     case 'uiState.posts':
-      renderPosts(elements, state, value);
+      renderPosts(elements, state, i18nextInstance, value);
       break;
     case 'processState':
-      rendeFeedback(elements, value, prevValue);
+      rendeFeedback(elements, i18nextInstance, value, prevValue);
       submitButtonHandler(elements, value);
       break;
     case 'uiState.selectedPostId':
